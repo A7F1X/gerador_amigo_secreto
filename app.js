@@ -26,6 +26,14 @@ const confetti = document.getElementById("confetti");
 
 const restrictions = new Map();
 
+// Evita chamadas simultâneas ao compartilhamento nativo.
+let shareBusy = false;
+
+// Se o usuário saiu do app durante o share, a promise pode ficar pendente.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) shareBusy = false;
+});
+
 function nameKey(name) {
   return name.toLocaleLowerCase("pt-BR");
 }
@@ -340,6 +348,12 @@ function createShareButton(link, owner) {
   button.textContent = "↗";
 
   button.addEventListener("click", async () => {
+    if (shareBusy) {
+      setMessage("Aguarde o compartilhamento anterior terminar.", false);
+      return;
+    }
+
+    shareBusy = true;
     try {
       await navigator.share({
         title: "Gerador de Amigo Secreto",
@@ -348,8 +362,21 @@ function createShareButton(link, owner) {
       });
       setMessage(`Link de ${owner} compartilhado!`, false);
     } catch (error) {
-      if (error && error.name === "AbortError") return;
-      setMessage("Não foi possível compartilhar este link.", true);
+      if (error && error.name === "AbortError") {
+        setMessage("Compartilhamento cancelado.", false);
+      } else if (error && error.name === "NotAllowedError") {
+        const copied = await copyText(link);
+        setMessage(
+          copied
+            ? "Compartilhamento bloqueado pelo navegador; link copiado!"
+            : "Não foi possível compartilhar este link.",
+          !copied
+        );
+      } else {
+        setMessage("Não foi possível compartilhar este link.", true);
+      }
+    } finally {
+      shareBusy = false;
     }
   });
 
