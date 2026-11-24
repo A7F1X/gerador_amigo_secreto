@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Crie um sorteio e compartilhe links que revelam o nome sorteado." />
+    <title>Gerador de Amigo Secreto</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background" aria-hidden="true"></div>
+
+    <div class="app">
+      <header class="topbar">
+        <a class="brand" href="./" id="brandLink">
+          <span class="brand-icon" aria-hidden="true">🎁</span>
+          <span>Gerador de Amigo Secreto</span>
+        </a>
+      </header>
+
+      <main>
+        <section id="createView" class="view">
+          <div class="hero">
+            <h1>Sorteie, gere os links e <span class="highlight">surpreenda</span>.</h1>
+          </div>
+
+          <div class="card create-card">
+            <div class="card-heading">
+              <div>
+                <h2>Lista de participantes</h2>
+                <p>Ex.: Ana, Bruno, Carla, Diego</p>
+              </div>
+            </div>
+
+            <label class="sr-only" for="namesInput">Nomes separados por vírgula</label>
+            <textarea
+              id="namesInput"
+              rows="4"
+              placeholder="Ana, Bruno, Carla, Diego, Elisa"
+              spellcheck="false"
+            ></textarea>
+
+            <div class="mode-field">
+              <label class="checkbox-label" for="sorteioComRestricoes">
+                <input id="sorteioComRestricoes" type="checkbox" autocomplete="off" />
+                <span>Sorteio com restrições</span>
+              </label>
+            </div>
+
+            <div id="restrictionsPanel" class="restrictions-panel" hidden>
+              <div class="restrictions-head">
+                <div>
+                  <h3>Restrições do sorteio</h3>
+                  <p>Para cada participante, escolha quem ele não pode tirar.</p>
+                </div>
+              </div>
+              <div id="restrictionsList" class="restrictions-list"></div>
+              <div class="restrictions-footer">
+                <p id="restrictionsHint" role="status" aria-live="polite">
+                  As restrições são aplicadas automaticamente no sorteio.
+                </p>
+                <button id="clearRestrictionsButton" class="btn btn-ghost" type="button">
+                  Limpar restrições
+                </button>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="drawButton" class="btn btn-primary" type="button">
+                <span aria-hidden="true">✨</span> Sortear e gerar links
+              </button>
+              <button id="clearButton" class="btn btn-ghost" type="button">Limpar</button>
+            </div>
+
+            <p id="message" class="message" role="status" aria-live="polite"></p>
+          </div>
+
+          <section id="results" class="card results-card" hidden>
+            <div class="card-heading">
+              <div>
+                <h2>Links gerados</h2>
+                <p id="resultsHint">Envie um link para cada participante.</p>
+              </div>
+            </div>
+
+            <ul id="linksList" class="links-list"></ul>
+
+            <p class="tip">
+              <span aria-hidden="true">✉️</span>
+              O nome sorteado fica disponível assim que o link for acessado. Mande
+              apenas para o participante correspondente.
+            </p>
+          </section>
+        </section>
+        <section id="revealView" class="view reveal-view" hidden>
+          <div class="reveal-wrap">
+            <h1 id="revealTitle">Chegou a hora da revelação!</h1>
+
+            <div class="reveal-card" id="revealCard">
+              <div class="reveal-card-top">
+                <span class="gift" aria-hidden="true">🎁</span>
+                <p>Seu amigo secreto é</p>
+              </div>
+
+              <div class="name-plate">
+                <span id="revealedName" class="revealed-name"></span>
+              </div>
+
+              <p class="reveal-caption">
+                <span id="captionText">Guarde segredo até a hora do encontro!</span>
+                <span id="captionEmoji" class="caption-emoji" aria-hidden="true">🤫</span>
+              </p>
+
+              <button id="replayButton" class="btn btn-outline" type="button">
+                Rever revelação
+              </button>
+            </div>
+
+            <button id="backButton" class="btn btn-ghost back-button" type="button">
+              ← Criar um novo sorteio
+            </button>
+          </div>
+          <div id="confetti" class="confetti" aria-hidden="true"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        feito com ❤️ pelo A7F1X
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
