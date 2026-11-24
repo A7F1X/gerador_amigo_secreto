@@ -171,11 +171,6 @@ function showToast(text, isError = false) {
   }, 3500);
 }
 
-function hideToast() {
-  window.clearTimeout(toastTimer);
-  toast.classList.remove("is-visible");
-}
-
 function parseNames() {
   const seen = new Set();
   const names = [];
