@@ -10,7 +10,6 @@ const restrictionsHint = document.getElementById("restrictionsHint");
 const clearRestrictionsButton = document.getElementById("clearRestrictionsButton");
 const drawButton = document.getElementById("drawButton");
 const clearButton = document.getElementById("clearButton");
-const message = document.getElementById("message");
 const results = document.getElementById("results");
 const linksList = document.getElementById("linksList");
 const resultsHint = document.getElementById("resultsHint");
@@ -23,16 +22,9 @@ const captionEmoji = document.getElementById("captionEmoji");
 const backButton = document.getElementById("backButton");
 const brandLink = document.getElementById("brandLink");
 const confetti = document.getElementById("confetti");
+const toast = document.getElementById("toast");
 
 const restrictions = new Map();
-
-// Evita chamadas simultâneas ao compartilhamento nativo.
-let shareBusy = false;
-
-// Se o usuário saiu do app durante o share, a promise pode ficar pendente.
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) shareBusy = false;
-});
 
 function nameKey(name) {
   return name.toLocaleLowerCase("pt-BR");
@@ -167,9 +159,21 @@ function sortearComRestricoes(names) {
   return assigned.map((key) => names[indexByKey.get(key)]);
 }
 
-function setMessage(text, isError = false) {
-  message.textContent = text;
-  message.classList.toggle("error", isError);
+let toastTimer = null;
+
+function showToast(text, isError = false) {
+  window.clearTimeout(toastTimer);
+  toast.textContent = text;
+  toast.classList.toggle("is-error", isError);
+  toast.classList.add("is-visible");
+  toastTimer = window.setTimeout(() => {
+    toast.classList.remove("is-visible");
+  }, 3500);
+}
+
+function hideToast() {
+  window.clearTimeout(toastTimer);
+  toast.classList.remove("is-visible");
 }
 
 function parseNames() {
@@ -312,7 +316,7 @@ namesInput.addEventListener("input", syncRestrictions);
 clearRestrictionsButton.addEventListener("click", () => {
   restrictions.clear();
   syncRestrictions();
-  setMessage("Restrições removidas.", false);
+  showToast("Restrições removidas.", false);
 });
 
 function createCopyButton(link, owner) {
@@ -325,58 +329,17 @@ function createCopyButton(link, owner) {
 
   button.addEventListener("click", async () => {
     const copied = await copyText(link);
-    setMessage(copied ? `Link de ${owner} copiado!` : "Não foi possível copiar. Selecione o link manualmente.", !copied);
+    showToast(
+      copied
+        ? `Link de ${owner} copiado!`
+        : "Não foi possível copiar. Selecione o link manualmente.",
+      !copied
+    );
     if (copied) {
       button.textContent = "✓";
       window.setTimeout(() => {
         button.textContent = "📋";
       }, 1600);
-    }
-  });
-
-  return button;
-}
-
-function createShareButton(link, owner) {
-  if (typeof navigator.share !== "function") return null;
-
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "share-btn";
-  button.title = `Compartilhar link de ${owner}`;
-  button.setAttribute("aria-label", button.title);
-  button.textContent = "↗";
-
-  button.addEventListener("click", async () => {
-    if (shareBusy) {
-      setMessage("Aguarde o compartilhamento anterior terminar.", false);
-      return;
-    }
-
-    shareBusy = true;
-    try {
-      await navigator.share({
-        title: "Gerador de Amigo Secreto",
-        text: "Abra seu link para descobrir o nome sorteado!",
-        url: link,
-      });
-      setMessage(`Link de ${owner} compartilhado!`, false);
-    } catch (error) {
-      if (error && error.name === "AbortError") {
-        setMessage("Compartilhamento cancelado.", false);
-      } else if (error && error.name === "NotAllowedError") {
-        const copied = await copyText(link);
-        setMessage(
-          copied
-            ? "Compartilhamento bloqueado pelo navegador; link copiado!"
-            : "Não foi possível compartilhar este link.",
-          !copied
-        );
-      } else {
-        setMessage("Não foi possível compartilhar este link.", true);
-      }
-    } finally {
-      shareBusy = false;
     }
   });
 
@@ -408,8 +371,6 @@ function renderLinks(participants, drawnNames) {
     anchor.title = link;
 
     row.append(owner, anchor, createCopyButton(link, participant));
-    const shareButton = createShareButton(link, participant);
-    if (shareButton) row.appendChild(shareButton);
     linksList.appendChild(row);
   });
 }
@@ -444,7 +405,7 @@ drawButton.addEventListener("click", () => {
   const { names, duplicates } = parseNames();
 
   if (names.length < 2) {
-    setMessage("Informe pelo menos 2 nomes diferentes, separados por vírgula.", true);
+    showToast("Informe pelo menos 2 nomes diferentes, separados por vírgula.", true);
     results.hidden = true;
     return;
   }
@@ -456,7 +417,7 @@ drawButton.addEventListener("click", () => {
 
   if (!drawn) {
     results.hidden = true;
-    setMessage(
+    showToast(
       "Não foi possível sortear com essas restrições. Remova algumas restrições e tente novamente.",
       true
     );
@@ -468,7 +429,7 @@ drawButton.addEventListener("click", () => {
   results.hidden = false;
 
   const warning = duplicates ? ` ${duplicates} nome(s) repetido(s) foi(ram) ignorado(s).` : "";
-  setMessage(`Sorteio realizado para ${names.length} participantes!${warning}`, duplicates > 0);
+  showToast(`Sorteio realizado para ${names.length} participantes!${warning}`, duplicates > 0);
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
@@ -477,7 +438,7 @@ clearButton.addEventListener("click", () => {
   syncRestrictions();
   results.hidden = true;
   linksList.replaceChildren();
-  setMessage("");
+  showToast("Nomes limpos.");
   namesInput.focus();
 });
 
@@ -679,7 +640,7 @@ function handleHash() {
     reveal(name, participant && participant.trim() ? participant : null);
   } catch (error) {
     showCreateView();
-    setMessage("Este link é inválido ou está corrompido. Peça um novo link ao organizador.", true);
+    showToast("Este link é inválido ou está corrompido. Peça um novo link ao organizador.", true);
   }
 }
 
